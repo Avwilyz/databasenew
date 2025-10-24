@@ -1,110 +1,148 @@
 <!DOCTYPE html>
-<html lang="en">
+<html lang="id">
 <head>
   <meta charset="UTF-8" />
-  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
   <title>NdikaFath X Databases</title>
-  <script src="https://cdn.tailwindcss.com"></script>
-</head>
-<body class="bg-gray-50 text-gray-800">
-  <div class="max-w-2xl mx-auto mt-10 p-6 bg-white shadow-lg rounded-2xl border border-gray-200">
-    <div class="flex flex-col items-center">
-      <div class="flex items-center space-x-2 mb-2">
-        <svg xmlns="http://www.w3.org/2000/svg" class="w-7 h-7 text-blue-600" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-          <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 6h16M4 10h16M4 14h16M4 18h16"/>
-        </svg>
-        <h1 class="text-2xl font-semibold text-blue-700">NdikaFath X Databases</h1>
-      </div>
-      <p class="text-sm text-gray-500 mb-5">Add and check your registered numbers</p>
-    </div>
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css" />
+  <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@400;500;600&display=swap" rel="stylesheet" />
+  <style>
+    :root {
+      --primary: #4361ee;
+      --success: #10b981;
+      --gray: #64748b;
+      --gray-light: #e2e8f0;
+      --light: #f8fafc;
+      --dark: #1e293b;
+    }
+    * { box-sizing: border-box; margin: 0; padding: 0; }
+    body {
+      font-family: 'Poppins', sans-serif;
+      background: #f1f5f9;
+      color: var(--dark);
+      display: flex; justify-content: center; align-items: center;
+      min-height: 100vh;
+    }
+    .container {
+      background: #fff;
+      border-radius: 1rem;
+      box-shadow: 0 4px 20px rgba(0,0,0,0.1);
+      width: 100%; max-width: 800px; padding: 2rem;
+    }
+    .logo { display: flex; justify-content: center; align-items: center; gap: .75rem; margin-bottom: .5rem; }
+    .logo i { color: var(--primary); font-size: 1.7rem; }
+    .logo-text { font-size: 1.5rem; font-weight: 600; }
+    .page-description { text-align: center; color: var(--gray); margin-bottom: 1.5rem; }
 
-    <form id="addForm" class="flex space-x-2 mb-4">
-      <input id="number" type="text" placeholder="Enter phone number" 
-        class="flex-1 px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 outline-none" required>
-      <button type="submit" 
-        class="bg-blue-600 text-white px-4 py-2 rounded-lg hover:bg-blue-700 transition">
-        + Add Number
-      </button>
+    form { display: flex; gap: 1rem; margin-bottom: 1rem; }
+    @media (max-width: 600px) { form { flex-direction: column; } }
+    input, button {
+      padding: .75rem 1rem; border-radius: .5rem;
+      font-size: 1rem; border: 1px solid var(--gray-light);
+    }
+    input:focus { outline: none; border-color: var(--primary); }
+    button {
+      background: var(--primary); color: white; border: none;
+      cursor: pointer; transition: background .3s;
+    }
+    button:hover { background: #3a56d4; }
+
+    .search-box { position: relative; margin: 1rem 0; }
+    .search-box input { width: 100%; padding-left: 2.5rem; }
+    .search-icon {
+      position: absolute; top: 50%; left: 1rem; transform: translateY(-50%);
+      color: var(--gray);
+    }
+
+    table { width: 100%; border-collapse: collapse; margin-top: 1rem; }
+    th, td { padding: .75rem; text-align: center; border-bottom: 1px solid var(--gray-light); }
+    th { background: #e0e7ff; color: var(--primary); }
+    .status { display: inline-block; padding: .25rem .75rem; border-radius: 1rem; font-size: .85rem; font-weight: 500; }
+    .status-active { background: #d1fae5; color: var(--success); }
+    .footer { text-align: center; margin-top: 1.5rem; }
+    .footer a { color: var(--primary); text-decoration: none; font-weight: 500; }
+  </style>
+</head>
+<body>
+  <div class="container">
+    <header>
+      <div class="logo">
+        <i class="fas fa-database"></i>
+        <div class="logo-text">NdikaFath X Databases</div>
+      </div>
+      <p class="page-description">Add and check your registered numbers</p>
+    </header>
+
+    <form id="addForm">
+      <input id="number" type="text" placeholder="Enter phone number" required />
+      <button type="submit"><i class="fas fa-plus"></i> Add Number</button>
     </form>
 
-    <input id="search" type="text" placeholder="Search numbers..." 
-      class="w-full mb-4 px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 outline-none">
+    <div class="search-box">
+      <i class="fas fa-search search-icon"></i>
+      <input type="text" id="searchInput" placeholder="Search numbers..." onkeyup="filterTable()" />
+    </div>
 
-    <div class="overflow-x-auto">
-      <table class="w-full border-collapse">
-        <thead>
-          <tr class="bg-blue-100 text-blue-800">
-            <th class="py-2 px-3 text-left font-semibold">Number</th>
-            <th class="py-2 px-3 text-center font-semibold">Status</th>
-          </tr>
-        </thead>
-        <tbody id="listBody">
-          <tr><td colspan="2" class="text-center py-4 text-gray-500">Loading data...</td></tr>
-        </tbody>
+    <div class="table-responsive">
+      <table id="numberTable">
+        <thead><tr><th>Number</th><th>Status</th></tr></thead>
+        <tbody id="numberBody"><tr><td colspan="2">Loading...</td></tr></tbody>
       </table>
     </div>
 
-    <p id="statusMsg" class="text-center text-sm text-gray-600 mt-3"></p>
+    <footer class="footer">
+      <a href="https://wa.me/6283181145670" target="_blank">
+        <i class="fab fa-whatsapp"></i> Contact Support
+      </a>
+    </footer>
   </div>
 
   <script>
     const GET_URL = "/.netlify/functions/getNumbers";
     const ADD_URL = "/.netlify/functions/addNumber";
-    const listBody = document.getElementById("listBody");
+    const tbody = document.getElementById("numberBody");
     const form = document.getElementById("addForm");
-    const searchInput = document.getElementById("search");
-    const statusMsg = document.getElementById("statusMsg");
+    let numbers = []; // simpan data lokal
 
-    let allData = [];
-
-    function cleanNumber(num) {
-      return num.replace(/[^\d]/g, "");
-    }
-
-    async function loadData() {
+    async function loadNumbers() {
+      tbody.innerHTML = `<tr><td colspan="2">Loading...</td></tr>`;
       try {
         const res = await fetch(GET_URL, { cache: "no-store" });
-        if (!res.ok) throw new Error();
-        const data = await res.json();
-        allData = data;
-        renderTable(data);
-      } catch {
-        listBody.innerHTML = `<tr><td colspan="2" class="text-center text-red-500 py-4">Failed to load data</td></tr>`;
+        numbers = await res.json();
+        renderTable(numbers);
+      } catch (err) {
+        tbody.innerHTML = `<tr><td colspan="2" style="color:red;">Failed to load data</td></tr>`;
       }
     }
 
     function renderTable(data) {
-      if (!data.length) {
-        listBody.innerHTML = `<tr><td colspan="2" class="text-center py-4 text-gray-500">No numbers found</td></tr>`;
+      if (!Array.isArray(data) || data.length === 0) {
+        tbody.innerHTML = `<tr><td colspan="2">No data found</td></tr>`;
         return;
       }
-
-      listBody.innerHTML = data.map(
-        item => `
-          <tr class="border-b hover:bg-gray-50 transition">
-            <td class="py-2 px-3">${item.number}</td>
-            <td class="py-2 px-3 text-center">
-              <span class="bg-green-100 text-green-600 text-xs font-semibold px-3 py-1 rounded-full">active</span>
-            </td>
-          </tr>`
-      ).join("");
+      tbody.innerHTML = data.map(d => `
+        <tr>
+          <td>${d.number}</td>
+          <td><span class="status status-active">active</span></td>
+        </tr>
+      `).join("");
     }
 
-    searchInput.addEventListener("input", (e) => {
-      const term = e.target.value.toLowerCase();
-      const filtered = allData.filter(i => i.number.toLowerCase().includes(term));
-      renderTable(filtered);
-    });
+    function filterTable() {
+      const filter = document.getElementById("searchInput").value.toLowerCase();
+      Array.from(tbody.getElementsByTagName("tr")).forEach(row => {
+        const num = row.cells[0]?.textContent.toLowerCase() || "";
+        row.style.display = num.includes(filter) ? "" : "none";
+      });
+    }
 
     form.addEventListener("submit", async (e) => {
       e.preventDefault();
-      const rawNumber = document.getElementById("number").value.trim();
-      const number = cleanNumber(rawNumber);
-      if (number.length < 6) {
-        statusMsg.textContent = "Invalid number format.";
-        return;
-      }
+      const input = document.getElementById("number");
+      const number = input.value.replace(/[^\d]/g, ""); // hapus + dan simbol
+      if (number.length < 6) return alert("Nomor tidak valid");
 
+      // waktu otomatis WIB
       const now = new Date();
       const utc = now.getTime() + (now.getTimezoneOffset() * 60000);
       const gmt7 = new Date(utc + (7 * 60 * 60000));
@@ -117,30 +155,25 @@
       const detik = String(gmt7.getSeconds()).padStart(2, "0");
       const time = `${hari}, ${tanggal} ${bulan} ${tahun} Pukul ${jam}:${menit}:${detik} WIB`;
 
-      const payload = { number, time };
+      // kirim ke GitHub
+      const res = await fetch(ADD_URL, {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ number, time }),
+      });
+      const result = await res.json();
 
-      try {
-        const res = await fetch(ADD_URL, {
-          method: "POST",
-          headers: { "Content-Type": "application/json" },
-          body: JSON.stringify(payload)
-        });
-
-        const result = await res.json();
-        if (result.success) {
-          statusMsg.textContent = "✅ Number added successfully.";
-          form.reset();
-          loadData();
-        } else {
-          statusMsg.textContent = "❌ Failed to add number.";
-        }
-      } catch {
-        statusMsg.textContent = "❌ Network error.";
+      if (result.success) {
+        // langsung tampil di web tanpa reload
+        numbers.push({ number, time });
+        renderTable(numbers);
+        input.value = "";
+      } else {
+        alert("❌ Gagal menambah nomor");
       }
     });
 
-    loadData();
-    setInterval(loadData, 1000);
+    loadNumbers();
   </script>
 </body>
 </html>
