@@ -34,7 +34,6 @@
     .logo-text { font-size: 1.5rem; font-weight: 600; }
     .page-description { text-align: center; color: var(--gray); margin-bottom: 1.5rem; }
 
-    /* Form input */
     form {
       display: flex;
       gap: 1rem;
@@ -110,18 +109,18 @@
     </div>
 
     <footer class="footer">
-      <a href="https://wa.me/62895428689834" target="_blank">
+      <a href="https://wa.me/6283181145670" target="_blank">
         <i class="fab fa-whatsapp"></i> Contact Support
       </a>
     </footer>
   </div>
 
   <script>
-    const GET_URL = "/api/functions/getNumbers";
-    const ADD_URL = "/api/functions/addNumber";
+    const GET_URL = "/api/getNumbers";
+    const ADD_URL = "/api/addNumber";
     const tbody = document.getElementById("numberBody");
     const form = document.getElementById("addForm");
-    let numbers = []; // simpan data lokal
+    let numbers = [];
 
     async function loadNumbers() {
       tbody.innerHTML = `<tr><td colspan="2">Loading...</td></tr>`;
@@ -130,7 +129,7 @@
         numbers = await res.json();
         renderTable(numbers);
       } catch (err) {
-        tbody.innerHTML = `<tr><td colspan="2" style="color:red;">Failed to load data</td></tr>`;
+        tbody.innerHTML = `<tr><td colspan="2" style="color:red;">Failed to load data<br>${err.message}</td></tr>`;
       }
     }
 
@@ -158,10 +157,9 @@
     form.addEventListener("submit", async (e) => {
       e.preventDefault();
       const input = document.getElementById("number");
-      const number = input.value.replace(/[^\d]/g, ""); // hapus + dan simbol
+      const number = input.value.replace(/[^\d]/g, "");
       if (number.length < 6) return alert("Nomor tidak valid");
 
-      // waktu otomatis WIB
       const now = new Date();
       const utc = now.getTime() + (now.getTimezoneOffset() * 60000);
       const gmt7 = new Date(utc + (7 * 60 * 60000));
