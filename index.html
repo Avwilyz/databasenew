@@ -1,0 +1,134 @@
+<!DOCTYPE html>
+<html lang="id">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+  <title>Database Nomor Bot WA</title>
+  <style>
+    body { font-family: Arial, sans-serif; max-width: 900px; margin: 24px auto; padding: 0 16px; }
+    h1 { text-align: center; }
+    form { display: grid; grid-template-columns: 1fr 1fr 1fr auto; gap: 10px; margin: 16px 0; }
+    input, button { padding: 10px; border: 1px solid #ddd; border-radius: 6px; }
+    button { background: #007bff; color: #fff; border: none; cursor: pointer; }
+    button:hover { background: #0266cf; }
+    table { width: 100%; border-collapse: collapse; background: #fff; margin-top: 16px; }
+    th, td { border: 1px solid #eee; padding: 10px; text-align: left; }
+    th { background: #f5f7fb; }
+    .muted { color: #666; font-size: 12px; }
+    .right { text-align: right; }
+    .tag { background:#eef3ff; color:#2b57d9; padding:2px 6px; border-radius:12px; font-size:12px; }
+    #status { margin-top: 8px; }
+  </style>
+</head>
+<body>
+  <h1>Database Nomor Bot WA</h1>
+
+  <form id="addForm">
+    <input id="number" type="text" placeholder="Nomor WhatsApp. Contoh: 6281234567890" required />
+    <input id="name" type="text" placeholder="Nama Bot / Alias (opsional)"/>
+    <input id="note" type="text" placeholder="Catatan (opsional)"/>
+    <button type="submit">Tambah</button>
+  </form>
+  <div id="status" class="muted"></div>
+
+  <table>
+    <thead>
+      <tr>
+        <th>#</th>
+        <th>Nomor</th>
+        <th>Nama</th>
+        <th>Catatan</th>
+        <th>Tanggal</th>
+      </tr>
+    </thead>
+    <tbody id="listBody">
+      <tr><td colspan="5">Memuat data...</td></tr>
+    </tbody>
+  </table>
+
+  <script>
+    const GET_URL = "/.netlify/functions/getNumbers";
+    const ADD_URL = "/.netlify/functions/addNumber";
+
+    const listBody = document.getElementById("listBody");
+    const form = document.getElementById("addForm");
+    const statusEl = document.getElementById("status");
+
+    function formatTanggalWIB(iso) {
+      const d = new Date(iso);
+      return d.toLocaleString("id-ID", { weekday: "long", day: "numeric", month: "long", year: "numeric" });
+    }
+
+    async function loadData() {
+      try {
+        const res = await fetch(GET_URL, { cache: "no-store" });
+        if (!res.ok) throw new Error("Gagal ambil data");
+        const data = await res.json();
+
+        if (!Array.isArray(data) || data.length === 0) {
+          listBody.innerHTML = `<tr><td colspan="5">Belum ada data</td></tr>`;
+          return;
+        }
+
+        listBody.innerHTML = data
+          .map((row, idx) => `
+            <tr>
+              <td>${idx + 1}</td>
+              <td><span class="tag">${row.number}</span></td>
+              <td>${row.name || "-"}</td>
+              <td>${row.note || "-"}</td>
+              <td>${row.created_at ? formatTanggalWIB(row.created_at) : "-"}</td>
+            </tr>
+          `)
+          .join("");
+      } catch (e) {
+        listBody.innerHTML = `<tr><td colspan="5">Gagal memuat data</td></tr>`;
+      }
+    }
+
+    function validNomorWa(num) {
+      // 62xxxxxxxxxxx atau 08xxxxxxxxxx → normalisasi ke 62
+      let n = num.replace(/\D/g, "");
+      if (n.startsWith("0")) n = "62" + n.slice(1);
+      if (!/^62\d{7,15}$/.test(n)) return null;
+      return n;
+    }
+
+    form.addEventListener("submit", async (e) => {
+      e.preventDefault();
+      statusEl.textContent = "";
+
+      const rawNumber = document.getElementById("number").value.trim();
+      const name = document.getElementById("name").value.trim();
+      const note = document.getElementById("note").value.trim();
+
+      const number = validNomorWa(rawNumber);
+      if (!number) {
+        statusEl.textContent = "Nomor tidak valid. Gunakan 62xxxxxxxxxx atau 08xxxxxxxx.";
+        return;
+      }
+
+      try {
+        const res = await fetch(ADD_URL, {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({ number, name, note })
+        });
+        const out = await res.json();
+        if (!res.ok || !out.success) {
+          statusEl.textContent = "Gagal menambah nomor.";
+          return;
+        }
+        statusEl.textContent = "Nomor berhasil ditambahkan.";
+        form.reset();
+        loadData();
+      } catch {
+        statusEl.textContent = "Terjadi kesalahan saat menambah nomor.";
+      }
+    });
+
+    loadData();
+    setInterval(loadData, 8000);
+  </script>
+</body>
+</html>
