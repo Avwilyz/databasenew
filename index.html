@@ -21,7 +21,7 @@
       background: #f1f5f9;
       color: var(--dark);
       display: flex; justify-content: center; align-items: center;
-      min-height: 100vh;
+      min-height: 100vh; padding: 1rem;
     }
     .container {
       background: #fff;
@@ -34,18 +34,36 @@
     .logo-text { font-size: 1.5rem; font-weight: 600; }
     .page-description { text-align: center; color: var(--gray); margin-bottom: 1.5rem; }
 
-    form { display: flex; gap: 1rem; margin-bottom: 1rem; }
-    @media (max-width: 600px) { form { flex-direction: column; } }
-    input, button {
-      padding: .75rem 1rem; border-radius: .5rem;
-      font-size: 1rem; border: 1px solid var(--gray-light);
+    /* Form input */
+    form {
+      display: flex;
+      gap: 1rem;
+      margin-bottom: 1.5rem;
+      flex-wrap: wrap;
     }
-    input:focus { outline: none; border-color: var(--primary); }
+    input, button {
+      padding: .8rem 1rem;
+      border-radius: .5rem;
+      font-size: 1rem;
+      border: 1px solid var(--gray-light);
+      flex: 1;
+      min-width: 220px;
+      transition: all 0.2s ease;
+    }
+    input:focus { outline: none; border-color: var(--primary); box-shadow: 0 0 0 2px rgba(67,97,238,0.2); }
     button {
-      background: var(--primary); color: white; border: none;
-      cursor: pointer; transition: background .3s;
+      background: var(--primary);
+      color: white;
+      border: none;
+      cursor: pointer;
+      font-weight: 500;
+      flex: 0 0 auto;
     }
     button:hover { background: #3a56d4; }
+    @media (max-width: 600px) {
+      form { flex-direction: column; }
+      input, button { width: 100%; }
+    }
 
     .search-box { position: relative; margin: 1rem 0; }
     .search-box input { width: 100%; padding-left: 2.5rem; }
@@ -54,11 +72,12 @@
       color: var(--gray);
     }
 
-    table { width: 100%; border-collapse: collapse; margin-top: 1rem; }
+    table { width: 100%; border-collapse: collapse; margin-top: 1rem; font-size: .95rem; }
     th, td { padding: .75rem; text-align: center; border-bottom: 1px solid var(--gray-light); }
     th { background: #e0e7ff; color: var(--primary); }
     .status { display: inline-block; padding: .25rem .75rem; border-radius: 1rem; font-size: .85rem; font-weight: 500; }
     .status-active { background: #d1fae5; color: var(--success); }
+
     .footer { text-align: center; margin-top: 1.5rem; }
     .footer a { color: var(--primary); text-decoration: none; font-weight: 500; }
   </style>
@@ -155,7 +174,6 @@
       const detik = String(gmt7.getSeconds()).padStart(2, "0");
       const time = `${hari}, ${tanggal} ${bulan} ${tahun} Pukul ${jam}:${menit}:${detik} WIB`;
 
-      // kirim ke GitHub
       const res = await fetch(ADD_URL, {
         method: "POST",
         headers: { "Content-Type": "application/json" },
@@ -164,7 +182,6 @@
       const result = await res.json();
 
       if (result.success) {
-        // langsung tampil di web tanpa reload
         numbers.push({ number, time });
         renderTable(numbers);
         input.value = "";
